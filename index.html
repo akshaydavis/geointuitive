@@ -4,18 +4,47 @@
   <body onload="getLocation()">
     <p id="demo"></p>
     <script>
-        var x = document.getElementById("demo");
-        function getLocation() {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(showPosition);
-          } else { 
-            x.innerHTML = "Geolocation is not supported by this browser.";
-          }
+      var x = document.getElementById("demo");
+      function getLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(showPosition);
+        } else { 
+          x.innerHTML = "Geolocation is not supported by this browser.";
         }
+      }
         
-        function showPosition(position) {
-          x.innerHTML = "Latitude: " + position.coords.latitude + "<br>Longitude: " + position.coords.longitude;
-        }
-</script>
+      function showPosition(position) {
+        x.innerHTML = "Latitude: " + position.coords.latitude + "<br>Longitude: " + position.coords.longitude;
+        getUser(position, function() {
+          var country = "";
+          var locality = "";
+          var resultJSON = JSON.parse(this.responseText);
+          resultJSON.results[0].address_components.forEach(function(element) {
+            if (element.types.includes("country")) {
+              country = element.long_name;
+            } else if (element.types.includes("locality")) {
+              locality = element.long_name;
+            }
+          });
+          
+          x.innerHTML = x.innerHTML + 
+            "<br>Country: " + country +
+            "<br>Locality: " + locality;
+        });
+      }
+        
+      function getUser(position, callback) {
+        var usersUrl = "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
+        var params = position.coords.latitude + "," + position.coords.longitude + "&key=AIzaSyChAXaI-mTqpsF0otRb0Pt8UxWgeMJ1nVc";
+        var xhttp = new XMLHttpRequest(); 
+    
+        xhttp.addEventListener('load', callback);
+        xhttp.addEventListener('error', () => console.log("Request to "+usersUrl+params+" failed"));
+    
+        xhttp.open("GET", usersUrl + params, true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.send();
+      }
+    </script>
   </body>
 </html>
